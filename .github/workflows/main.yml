@@ -1,0 +1,28 @@
+name: Windows-10-RDP
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-2019
+    steps:
+      - name: Download and Install Tailscale
+        run: |
+          Invoke-WebRequest https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe -OutFile tailscale-setup.exe
+          Start-Process -FilePath .\tailscale-setup.exe -ArgumentList "/quiet" -Wait
+      
+      - name: Authenticate Tailscale
+        run: |
+          & "C:\Program Files\Tailscale\tailscale.exe" up --authkey ${{ secrets.TAILSCALE_AUTH_KEY }}
+      
+      - name: Setup User Password
+        run: |
+          $Password = "P@ssword123"
+          $User = "runneradmin"
+          $PasswordSecure = ConvertTo-SecureString $Password -AsPlainText -Force
+          Set-LocalUser -Name $User -Password $PasswordSecure
+          Write-Host "User: $User | Password: $Password"
+
+      - name: Keep RDP Alive
+        run: |
+          Write-Host "RDP is Ready! Connect via Tailscale IP."
+          while($true) { Start-Sleep -Seconds 1800 }
